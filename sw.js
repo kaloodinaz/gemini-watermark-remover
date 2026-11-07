@@ -1,6 +1,6 @@
 /* Service worker: offline support + fast repeat visits */
-const VERSION = 'gwr-v1';
-const ASSETS = ['./', 'index.html', 'main.js', 'favicon.svg', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
+const VERSION = 'gwr-v2';
+const ASSETS = ['./', 'index.html', 'main.js?v=1.2', 'favicon.svg', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));

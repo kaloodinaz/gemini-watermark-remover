@@ -7,9 +7,9 @@
 })(this, function () {
   'use strict';
 
-  /* ======================================================================
+  /* 
    * CORE: pure pixel logic (no DOM), so it can be tested in Node
-   * ==================================================================== */
+   *  */
   var P = 0.7;                   // star exponent: <1 gives the concave "sparkle" sides
   var MAX_REGION = 3000000;      // largest area (px) filled in one go for images
   var MAX_VIDEO_REGION = 500000; // same limit for video frames
@@ -88,7 +88,7 @@
     return { x: x0, y: y0, w: rw, h: rh, hole: hole };
   }
 
-  /* ---------- Inpainter: pyramid push-pull + Laplace relaxation + grain ---------- */
+  /*  Inpainter: pyramid push-pull + Laplace relaxation + grain  */
   function Inpainter(w, h, hole, opt) {
     opt = opt || {};
     this.w = w; this.h = h; this.hole = hole;
@@ -216,7 +216,7 @@
     }
   };
 
-  /* ---------- Sparkle detection: star-shaped template match ---------- */
+  /*  Sparkle detection: star-shaped template match  */
   function detectWindow(W, H) {
     if (W < 120 || H < 120) return null;
     var p = sparkleParams(W, H), R = Math.round(p.base * 0.6), maxS = Math.ceil(p.base * 1.45);
@@ -325,9 +325,9 @@
     MAX_REGION: MAX_REGION, MAX_VIDEO_REGION: MAX_VIDEO_REGION
   };
 
-  /* ======================================================================
+  /* 
    * UI
-   * ==================================================================== */
+   *  */
   function start() {
     var $ = function (id) { return document.getElementById(id); };
     var raf = window.requestAnimationFrame.bind(window);
@@ -350,7 +350,7 @@
       return m + ':' + (s < 10 ? '0' : '') + s;
     }
 
-    /* ---------- selection box (drag, move, resize) shared by image + video ---------- */
+    /*  selection box (drag, move, resize) shared by image + video  */
     function attachSelector(o) {
       var mode = null, h = null, start = null, orig = null, moved = false;
       function pt(e) {
@@ -359,6 +359,7 @@
       }
       function place() {
         var s = o.get(), d = o.dims(), el = o.el;
+        o.surface.classList.toggle('free', !s);
         if (!s) { el.hidden = true; return; }
         el.hidden = false;
         el.style.left = (s.x / d.W * 100) + '%'; el.style.top = (s.y / d.H * 100) + '%';
@@ -501,7 +502,7 @@
         setStatus(el.status, 'Opening image…');
         el.work.hidden = false; el.drop.hidden = true;
         decode(file).then(function (bmp) {
-          var w = bmp.width || bmp.naturalWidth, h = bmp.height || bmp.naturalHeight, k = Math.min(1, 8192 / Math.max(w, h));
+          var w = bmp.width || bmp.naturalWidth, h = bmp.height || bmp.naturalHeight, k = Math.min(1, 8192 / Math.max(w, h), Math.sqrt(16000000 / (w * h)));
           I.W = Math.round(w * k); I.H = Math.round(h * k);
           el.canvas.width = I.W; el.canvas.height = I.H;
           ctx.drawImage(bmp, 0, 0, I.W, I.H);
@@ -748,7 +749,7 @@
       el.cancel.addEventListener('click', function () { V.cancel = true; if (V.video) V.video.pause(); if (V.endHook) V.endHook(); });
       el.reset.addEventListener('click', function () { teardown(); el.work.hidden = true; el.drop.hidden = false; setStatus($('vidDropStatus'), ''); });
 
-      return { load: load };
+      return { load: load, busy: function () { return V.busy; } };
     }
 
     /* ====================== tabs, drop, paste, install ====================== */
@@ -772,7 +773,7 @@
     });
 
     function routeFile(file) {
-      if (!file) return;
+      if (!file || video.busy()) return;
       if (/^image\//.test(file.type)) { showTab('image'); image.load(file); }
       else if (/^video\//.test(file.type)) { showTab('video'); video.load(file); }
       else {
